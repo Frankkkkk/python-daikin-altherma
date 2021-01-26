@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name = "python-daikin-altherma",
-    version = "0.0.1",
+    version = "0.0.3",
     author = "Frank Villaro-Dixon",
     author_email = "frank@villaro-dixon.eu",
     description = ("Connect to daikin altherma heat pumps"),
@@ -18,7 +18,9 @@ setup(
     keywords = "daikin altherma heat pump",
     url = "http://github.com/Frankkkkk/python-daikin-altherma",
     packages=['daikin_altherma'],
-    long_description='',
+    long_description=open("README.md", "r").read(),
+    long_description_content_type="text/markdown",
+    install_requires=['websocket-client', 'dpath'],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",
