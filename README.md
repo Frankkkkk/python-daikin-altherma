@@ -12,3 +12,7 @@ Simply type `pip3 install python-daikin-altherma`
 >>> print(f'My outdoor temperature is {d.outdoor_temperature}°C')
 My outdoor temperature is 2.0°C
 ```
+
+
+# Acknowledgments
+Many thanks to [william-sy](https://github.com/william-sy/Daikin-BRP069A62) and [KarstenB](https://github.com/KarstenB/DaikinAltherma) for their bootstrap !
