@@ -33,46 +33,57 @@ class DaikinAltherma:
     def _requestValueHP(self, item: str, output_path: str):
         return self._requestValue(f"MNAE/{item}", output_path)
 
-    def function(self):
-        return self._requestValue("MNAE/", "/m2m:rsp/pc/m2m:cnt/lbl")
-
+    @property
     def adapter_model(self) -> str:
+        """ Returns the model of the LAN adapter """
+        # either BRP069A61 or BRP069A62
         return self._requestValue("MNCSE-node/deviceInfo", "/m2m:rsp/pc/m2m:dvi/mod")
 
+    @property
     def tank_temperature(self) -> float:
+        """ Returns the hot water tank temperature, in °C """
         return self._requestValueHP(
             "2/Sensor/TankTemperature/la", "/m2m:rsp/pc/m2m:cin/con"
         )
 
+    @property
     def indoor_temperature(self) -> float:
+        """ Returns the indoor temperature, in °C """
         return self._requestValueHP(
             "1/Sensor/IndoorTemperature/la", "/m2m:rsp/pc/m2m:cin/con"
         )
 
+    @property
     def outdoor_temperature(self) -> float:
+        """ Returns the outdoor temperature, in °C """
         return self._requestValueHP(
             "1/Sensor/OutdoorTemperature/la", "/m2m:rsp/pc/m2m:cin/con"
         )
 
+    @property
     def leaving_water_temperature(self) -> float:
+        """ Returns the heating leaving water temperature, in °C """
         return self._requestValueHP(
             "1/Sensor/LeavingWaterTemperatureCurrent/la", "m2m:rsp/pc/m2m:cin/con"
         )
 
-    def power_state(self) -> str:
-        return self._requestValueHP("1/Operation/Power/la", "m2m:rsp/pc/m2m:cin/con")
+    @property
+    def power_state(self) -> bool:
+        """ Returns the power state """
+        return self._requestValueHP("1/Operation/Power/la", "m2m:rsp/pc/m2m:cin/con") == "on"
 
+    @property
     def power_consumption(self) -> dict:
+        """ Returns the energy consumption in kWh per [D]ay, [W]eek, [M]onth """
         return self._requestValueHP("1/Consumption/la", "m2m:rsp/pc/m2m:cin/con")
 
 
 if __name__ == "__main__":
     ad = DaikinAltherma("192.168.10.126")
-    print(ad.adapter_model())
-    print(ad.function())
-    print(ad.tank_temperature())
-    print(ad.outdoor_temperature())
-    print(ad.indoor_temperature())
-    print(ad.leaving_water_temperature())
-    print(ad.power_state())
-    print(ad.power_consumption())
+    print(ad.adapter_model)
+    print(ad.tank_temperature)
+    print(ad.outdoor_temperature)
+    print(ad.indoor_temperature)
+    print(ad.leaving_water_temperature)
+    print(ad.power_state)
+    print(ad.power_consumption)
