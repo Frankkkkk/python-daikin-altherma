@@ -84,6 +84,17 @@ class DaikinAltherma:
         return self._requestValueHP("1/Operation/Power/la", "m2m:rsp/pc/m2m:cin/con") == "on"
 
     @property
+    def tank_power_state(self) -> bool:
+        """ Returns the tank power state """
+        return self._requestValueHP("2/Operation/Power/la", "m2m:rsp/pc/m2m:cin/con") == "on"
+
+
+    @property
+    def tank_powerful_state(self) -> bool:
+        """ Returns the tank powerful state """
+        return self._requestValueHP("2/Operation/Powerful/la", "m2m:rsp/pc/m2m:cin/con") == 1
+
+    @property
     def power_consumption(self) -> dict:
         """ Returns the energy consumption in kWh per [D]ay, [W]eek, [M]onth """
         return self._requestValueHP("1/Consumption/la", "m2m:rsp/pc/m2m:cin/con")
@@ -105,6 +116,22 @@ class DaikinAltherma:
         self._requestValueHP("1/Operation/Power", "/", payload)
 
 
+    def set_tank_heating(self, powerful_active: bool):
+        """ Whether to turn the water tank heating on(True) or off(False).
+        You can confirm that it works by calling self.tank_powerful_state
+        """
+        mode_dict = {
+            True: 1,
+            False: 0,
+        }
+
+        payload = {
+            'con': mode_dict[powerful_active],
+            'cnf': 'text/plain:0',
+        }
+
+        self._requestValueHP("2/Operation/Powerful", "/", payload)
+
 if __name__ == "__main__":
     ad = DaikinAltherma("192.168.10.126")
     print(ad.adapter_model)
@@ -116,3 +143,5 @@ if __name__ == "__main__":
     print(ad.power_consumption)
     ad.set_heating(True)
     print(ad.power_state)
+    print(ad.tank_power_state)
+    print(ad.tank_powerful_state)
