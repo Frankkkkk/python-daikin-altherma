@@ -52,3 +52,9 @@ class DaikinAltherma(builtins.object)
 
 # Acknowledgments
 Many thanks to [william-sy](https://github.com/william-sy/Daikin-BRP069A62) and [KarstenB](https://github.com/KarstenB/DaikinAltherma) for their bootstrap !
+
+# Alternatives
+
+- C# implementation: https://github.com/jbinko/dotnet-daikin-altherma
+- Home assistant component: https://github.com/tadasdanielius/daikin_altherma
+- ESP32 implementation: https://github.com/raomin/ESPAltherma
