@@ -73,7 +73,7 @@ class DaikinAltherma:
 
     @property
     def indoor_setpoint_temperature(self) -> float:
-        """ Returns the indoor temperature, in °C """
+        """ Returns the indoor setpoint (target) temperature, in °C """
         return self._requestValueHP(
             "1/Operation/TargetTemperature/la", "/m2m:rsp/pc/m2m:cin/con"
         )
@@ -107,7 +107,7 @@ class DaikinAltherma:
         return self._requestValueHP("1/Consumption/la", "m2m:rsp/pc/m2m:cin/con")
 
     def set_setpoint_temperature(self, setpoint_temperature_c: float):
-        """ Sets the heating setpoint temperature"""
+        """ Sets the heating setpoint (target) temperature, in °C"""
         payload = {
             'con': setpoint_temperature_c,
             'cnf': 'text/plain:0',
