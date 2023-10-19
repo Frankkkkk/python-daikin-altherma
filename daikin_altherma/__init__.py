@@ -72,6 +72,13 @@ class DaikinAltherma:
         )
 
     @property
+    def indoor_setpoint_temperature(self) -> float:
+        """ Returns the indoor temperature, in °C """
+        return self._requestValueHP(
+            "1/Operation/TargetTemperature/la", "/m2m:rsp/pc/m2m:cin/con"
+        )
+
+    @property
     def leaving_water_temperature(self) -> float:
         """ Returns the heating leaving water temperature, in °C """
         return self._requestValueHP(
@@ -98,6 +105,15 @@ class DaikinAltherma:
     def power_consumption(self) -> dict:
         """ Returns the energy consumption in kWh per [D]ay, [W]eek, [M]onth """
         return self._requestValueHP("1/Consumption/la", "m2m:rsp/pc/m2m:cin/con")
+
+    def set_setpoint_temperature(self, setpoint_temperature_c: float):
+        """ Sets the heating setpoint temperature"""
+        payload = {
+            'con': setpoint_temperature_c,
+            'cnf': 'text/plain:0',
+        }
+
+        self._requestValueHP("1/Operation/TargetTemperature", "/", payload)
 
     def set_heating(self, heating_active: bool):
         """ Whether to turn the heating on(True) or off(False).
