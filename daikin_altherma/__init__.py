@@ -48,9 +48,6 @@ class DaikinAltherma:
         assert result["m2m:rsp"]["rqi"] == reqid
         assert result["m2m:rsp"]["to"] == DaikinAltherma.UserAgent
 
-        print(output_path)
-        print(f'RES: >>> {result}')
-
         try:
             return dpath.util.get(result, output_path)
         except:
