@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name = "python-daikin-altherma",
-    version = "0.1.1",
+    version = "0.2.0",
     author = "Frank Villaro-Dixon",
     author_email = "frank@villaro-dixon.eu",
     description = ("Connect to daikin altherma heat pumps"),
