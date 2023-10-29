@@ -1,27 +1,9 @@
-import datetime
-import time
 from daikin_altherma import DaikinAltherma
 d = DaikinAltherma('192.168.11.100')
 
-now = datetime.datetime.utcnow() - datetime.timedelta(minutes=30)
-d.set_unit_datetime(now)
+d.print_all_status()
 
-while True:
-    dat = d.unit_datetime
-    now = datetime.datetime.utcnow()
-    print(f'NOW: {now}\nDAI: {dat}')
-    print(abs(datetime.datetime.utcnow() - dat))
-    time.sleep(1)
-
-#print(f'BEF: {d.unit_datetime}')
-#d.set_unit_datetime(now)
-#print(f'AFT: {d.unit_datetime}')
-#print(d.tank_schedule_state)
-#print(d.heating_schedule_state)
-#print(d.tank_schedule)
-
-#d.print_all_status()
-1/0
+1/0  # XXX the following will erase your schedules
 
 _present_day_schedule = {
     '0000': 17,
