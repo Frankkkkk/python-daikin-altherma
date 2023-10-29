@@ -400,10 +400,10 @@ Heating:
             schedule_wk = {}
             temps = hrs[i : i + 6]
             for c in temps:
-                ctime, ctemp = c.split(",")
+                ctime, cval = c.split(",")
                 if ctime == "":
                     continue
-                val = value_parser(ctemp)
+                val = value_parser(cval)
                 schedule_wk[ctime] = val
 
             i += 6
