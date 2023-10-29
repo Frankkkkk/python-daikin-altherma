@@ -58,6 +58,7 @@ class DaikinAltherma:
     UserAgent = "python-daikin-altherma"
     DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
     _heating_value_parser = lambda x: float(x)/10
+    DATETIME_FMT = "%Y%m%dT%H%M%SZ"
 
     def __init__(self, adapter_ip: str):
         self.adapter_ip = adapter_ip
@@ -115,7 +116,7 @@ class DaikinAltherma:
     def unit_datetime(self) -> datetime.datetime:
         """Returns the current date of the unit. Takes time to refresh"""
         d = self._requestValueHP("0/DateTime/la", "/m2m:rsp/pc/m2m:cin/con")
-        return datetime.datetime.strptime(d, "%Y%m%dT%H%M%SZ")
+        return datetime.datetime.strptime(d, self.DATETIME_FMT)
 
     @property
     def unit_model(self) -> str:
