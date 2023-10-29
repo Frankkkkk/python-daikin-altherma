@@ -1,5 +1,6 @@
 import json
 from typing import Callable
+import enum
 import logging
 import time
 import uuid
@@ -11,6 +12,11 @@ import dpath.util
 Day = Hour = str
 Temperature = float
 Schedule = dict[Day, dict[Hour, Temperature]]
+
+class TankScheduleEnum(enum.Enum):
+    OFF = 'off'
+    COMFORT = 'comfort'
+    ECO = 'eco'
 
 
 class DaikinAltherma:
@@ -245,7 +251,22 @@ class DaikinAltherma:
             out_schedules.append(self._unmarshall_schedule(schedule, value_parser))
         return out_schedules
 
+    @property
+    def schedule_tank_heating(self) -> list[Schedule]:
+        """ Returns the Schedule list heating """
+        d = self._requestValueHP("2/Schedule/List/Heating/la", "/m2m:rsp/pc/m2m:cin/con")
+        j = json.loads(d)
+        def value_parser(x):
+            return {
+                '2': TankScheduleEnum.OFF,
+                '1': TankScheduleEnum.COMFORT,
+                '0': TankScheduleEnum.ECO,
+            }[x]
 
+        out_schedules = []
+        for schedule in j['data']:
+            out_schedules.append(self._unmarshall_schedule(schedule, value_parser))
+        return out_schedules
 
     def set_heating_schedule(self, schedule: Schedule):
         ''' Sets the heating schedule for the heating. '''
