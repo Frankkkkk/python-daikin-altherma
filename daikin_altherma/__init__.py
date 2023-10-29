@@ -403,6 +403,9 @@ Heating:
                 ctime, cval = c.split(",")
                 if ctime == "":
                     continue
+                if cval == "":
+                    # For some reason, the time is declared but not the value.. ?
+                    continue
                 val = value_parser(cval)
                 schedule_wk[ctime] = val
 
