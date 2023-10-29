@@ -70,6 +70,12 @@ look at the [example file](example.py).
      |      This function name makes no sense, because it
      |      returns whether the heat pump is heating or cooling.
      |  
+     |  heating_schedule
+     |      Returns the HeatingSchedule list heating
+     |  
+     |  heating_schedule_state
+     |      Returns the actual heating schedule state
+     |  
      |  indoor_setpoint_temperature
      |      Returns the indoor setpoint (target) temperature, in °C
      |  
@@ -112,11 +118,11 @@ look at the [example file](example.py).
      |  remote_software_version
      |      Returns the remote console setting software version
      |  
-     |  schedule_list_heating
-     |      Returns the Schedule list heating
+     |  tank_schedule
+     |      Returns the TankSchedule list heating
      |  
-     |  schedule_next
-     |      What will happen next the temperature
+     |  tank_schedule_state
+     |      Returns the actual tank schedule state
      |  
      |  tank_setpoint_temperature
      |      Returns the hot water tank setpoint (target) temperature, in °C
@@ -146,10 +152,11 @@ look at the [example file](example.py).
      |  ----------------------------------------------------------------------
      |  Data and other attributes defined here:
      |  
+     |  DATETIME_FMT = '%Y%m%dT%H%M%SZ'
+     |  
      |  DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
      |  
      |  UserAgent = 'python-daikin-altherma'
-
 ```
 
 # Acknowledgments
