@@ -58,7 +58,7 @@ class DaikinAltherma:
         try:
             return dpath.util.get(result, output_path)
         except:
-            logging.error('Could not get data. Maybe the unit is rebooting ?')
+            logging.error('Could not get data. Maybe the unit is starting up?')
             raise
 
 
