@@ -10,6 +10,7 @@ websocket-client = "*"
 [dev-packages]
 flake8 = "*"
 nose2 = "*"
+black = "*"
 
 [requires]
 python_version = "3.10"
