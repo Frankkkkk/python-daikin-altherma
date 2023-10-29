@@ -1,5 +1,6 @@
 import json
 from typing import Callable
+from dataclasses import dataclass
 import enum
 import logging
 import time
@@ -11,13 +12,46 @@ import dpath.util
 
 Day = Hour = str
 Temperature = float
-Schedule = dict[Day, dict[Hour, Temperature]]
+HeatingSchedule = dict[Day, dict[Hour, Temperature]]
+TankSchedule = dict[Day, dict[Hour, 'TankStateEnum']]
 
 
-class TankScheduleEnum(enum.Enum):
+# XXX use StrEnum in some years when distros will have py 3.11
+class TankStateEnum(str, enum.Enum):
     OFF = "off"
     COMFORT = "comfort"
     ECO = "eco"
+
+    def __str__(self):
+        return str(self.value)
+
+    @staticmethod
+    def int_to_state(x: int) -> 'TankStateEnum':
+        x = str(x)
+        return {
+            "2": TankStateEnum.OFF,
+            "1": TankStateEnum.COMFORT,
+            "0": TankStateEnum.ECO,
+        }[x]
+
+
+class HeatingOperationMode(str, enum.Enum):
+    Heating = 'Heating'
+    Cooling = 'Cooling'
+
+@dataclass
+class _ScheduleState:
+    OperationMode: HeatingOperationMode
+    StartTime: int
+    Day: str ## XXX enum
+
+@dataclass
+class HeatingScheduleState(_ScheduleState):
+    TargetTemperature: float
+
+@dataclass
+class TankScheduleState(_ScheduleState):
+    TankState: TankStateEnum
 
 
 class DaikinAltherma:
@@ -259,8 +293,8 @@ class DaikinAltherma:
         self._requestValueHP("1/Operation/Power", "/", payload)
 
     @property
-    def schedule_list_heating(self) -> list[Schedule]:
-        """Returns the Schedule list heating"""
+    def heating_schedule(self) -> list[HeatingSchedule]:
+        """Returns the HeatingSchedule list heating"""
         d = self._requestValueHP(
             "1/Schedule/List/Heating/la", "/m2m:rsp/pc/m2m:cin/con"
         )
@@ -275,26 +309,22 @@ class DaikinAltherma:
         return out_schedules
 
     @property
-    def schedule_tank_heating(self) -> list[Schedule]:
-        """Returns the Schedule list heating"""
+    def tank_schedule(self) -> list[TankSchedule]:
+        """Returns the TankSchedule list heating"""
         d = self._requestValueHP(
             "2/Schedule/List/Heating/la", "/m2m:rsp/pc/m2m:cin/con"
         )
         j = json.loads(d)
 
         def value_parser(x):
-            return {
-                "2": TankScheduleEnum.OFF,
-                "1": TankScheduleEnum.COMFORT,
-                "0": TankScheduleEnum.ECO,
-            }[x]
+            return TankStateEnum.int_to_state(x)
 
         out_schedules = []
         for schedule in j["data"]:
             out_schedules.append(self._unmarshall_schedule(schedule, value_parser))
         return out_schedules
 
-    def set_heating_schedule(self, schedule: Schedule):
+    def set_heating_schedule(self, schedule: HeatingSchedule):
         """Sets the heating schedule for the heating."""
         schedule_str = self._marshall_schedule(schedule)
         dq = {"data": [schedule_str]}
@@ -305,20 +335,35 @@ class DaikinAltherma:
         }
         self._requestValueHP("1/Schedule/List/Heating", "/", payload)
 
-    #    @property
-    #    def is_heating_schedule_enabled(self):
-    #        return self._requestValueHP("1/Schedule/Active/la",  "/m2m:rsp/pc/m2m:cin/con")
 
     @property
-    def schedule_next(self) -> Schedule:
-        """What will happen next the temperature"""
+    def heating_schedule_state(self) -> HeatingScheduleState:
+        """Returns the actual heating schedule state"""
         d = self._requestValueHP("1/Schedule/Next/la", "/m2m:rsp/pc/m2m:cin/con")
         j = json.loads(d)
+        dq = j['data']
 
-        def value_parser(x) -> float:
-            return float(x) / 10
+        return HeatingScheduleState(
+            OperationMode=dq['OperationMode'],
+            StartTime=dq['StartTime'],
+            TargetTemperature=float(dq['TargetTemperature'])/10,
+            Day=dq['Day'],
+        )
 
-        return self._unmarshall_schedule(j, value_parser)
+    @property
+    def tank_schedule_state(self) -> TankScheduleState:
+        """Returns the actual tank schedule state"""
+        d = self._requestValueHP("2/Schedule/Next/la", "/m2m:rsp/pc/m2m:cin/con")
+        j = json.loads(d)
+        dq = j['data']
+
+        return TankScheduleState(
+            OperationMode=dq['OperationMode'],
+            StartTime=dq['StartTime'],
+            TankState=TankStateEnum.int_to_state(dq['TargetTemperature']),  #Copy paste powa
+            Day=dq['Day'],
+        )
+
 
     def print_all_status(self):
         print(
@@ -329,18 +374,21 @@ Daikin time: {self.unit_datetime}
 Hot water tank:
     Current: {self.tank_temperature}°C (target {self.tank_setpoint_temperature}°C)
     Heating enabled: {self.is_tank_heating_enabled} (Powerful: {self.is_tank_powerful})
+    Schedule: {self.tank_schedule[0]}
+    Schedule state: {self.tank_schedule_state}
 Heating:
     Outdoor temp:{self.outdoor_temperature}°C
     Indoor temp: {self.indoor_temperature}°C
     Heating target: {self.indoor_setpoint_temperature}°C (is heating enabled: {self.is_heating_enabled})
     Leaving water: {self.leaving_water_temperature}°C
     Heating mode: {self.heating_mode}
-    Schedule: {self.schedule_list_heating[0]}
+    Schedule: {self.heating_schedule[0]}
+    Schedule state: {self.heating_schedule_state}
     """
         )
 
     @staticmethod
-    def _unmarshall_schedule(schedule_str: str, value_parser: Callable) -> Schedule:
+    def _unmarshall_schedule(schedule_str: str, value_parser: Callable):
         """Converts a schedule string to a schedule dict.
         The dict keys are the days (DaikinAltherma.DAYS), and the
         values are a dict of hour (HHMM) -> Setpoint T°
@@ -365,7 +413,7 @@ Heating:
         return schedule
 
     @staticmethod
-    def _marshall_schedule(schedule: Schedule) -> str:
+    def _marshall_schedule(schedule) -> str:
         """' Converts a schedule dict to a Daikin schedule string"""
         week_schedule = []
         for day in DaikinAltherma.DAYS:
