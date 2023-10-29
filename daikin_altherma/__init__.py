@@ -57,6 +57,7 @@ class TankScheduleState(_ScheduleState):
 class DaikinAltherma:
     UserAgent = "python-daikin-altherma"
     DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+    _heating_value_parser = lambda x: float(x)/10
 
     def __init__(self, adapter_ip: str):
         self.adapter_ip = adapter_ip
@@ -300,12 +301,9 @@ class DaikinAltherma:
         )
         j = json.loads(d)
 
-        def value_parser(x) -> float:
-            return float(x) / 10
-
         out_schedules = []
         for schedule in j["data"]:
-            out_schedules.append(self._unmarshall_schedule(schedule, value_parser))
+            out_schedules.append(self._unmarshall_schedule(schedule, DaikinAltherma._heating_value_parser))
         return out_schedules
 
     @property
@@ -346,7 +344,7 @@ class DaikinAltherma:
         return HeatingScheduleState(
             OperationMode=dq['OperationMode'],
             StartTime=dq['StartTime'],
-            TargetTemperature=float(dq['TargetTemperature'])/10,
+            TargetTemperature=DaikinAltherma._heating_value_parser(dq['TargetTemperature']),
             Day=dq['Day'],
         )
 
