@@ -1,4 +1,5 @@
 import json
+from typing import Callable
 import logging
 import time
 import uuid
@@ -236,11 +237,15 @@ class DaikinAltherma:
         """ Returns the Schedule list heating """
         d = self._requestValueHP("1/Schedule/List/Heating/la", "/m2m:rsp/pc/m2m:cin/con")
         j = json.loads(d)
+        def value_parser(x) -> float:
+            return float(x)/10
 
         out_schedules = []
         for schedule in j['data']:
-            out_schedules.append(self._unmarshall_schedule(schedule))
+            out_schedules.append(self._unmarshall_schedule(schedule, value_parser))
         return out_schedules
+
+
 
     def set_heating_schedule(self, schedule: Schedule):
         ''' Sets the heating schedule for the heating. '''
@@ -263,7 +268,9 @@ class DaikinAltherma:
         """ What will happen next the temperature """
         d = self._requestValueHP("1/Schedule/Next/la", "/m2m:rsp/pc/m2m:cin/con")
         j = json.loads(d)
-        return self._unmarshall_schedule(j)
+        def value_parser(x) -> float:
+            return float(x)/10
+        return self._unmarshall_schedule(j, value_parser)
 
 
     def print_all_status(self):
@@ -285,7 +292,7 @@ Heating:
 
 
     @staticmethod
-    def _unmarshall_schedule(schedule_str: str) -> Schedule:
+    def _unmarshall_schedule(schedule_str: str, value_parser: Callable) -> Schedule:
         ''' Converts a schedule string to a schedule dict.
         The dict keys are the days (DaikinAltherma.DAYS), and the
         values are a dict of hour (HHMM) -> Setpoint T°
@@ -302,8 +309,8 @@ Heating:
                 ctime, ctemp = c.split(',')
                 if ctime == '':
                     continue
-                ctemp = float(ctemp)/10
-                schedule_wk[ctime] = ctemp
+                val = value_parser(ctemp)
+                schedule_wk[ctime] = val
 
             i += 6
             schedule[day] = schedule_wk
