@@ -114,9 +114,20 @@ class DaikinAltherma:
 
     @property
     def unit_datetime(self) -> datetime.datetime:
-        """Returns the current date of the unit. Takes time to refresh"""
+        """Returns the current date of the unit. Is refreshed every minute or so"""
         d = self._requestValueHP("0/DateTime/la", "/m2m:rsp/pc/m2m:cin/con")
         return datetime.datetime.strptime(d, self.DATETIME_FMT)
+
+    def set_unit_datetime(self, d):
+        """Sets the datetime of your unit. Does not work on all units"""
+        sd = datetime.datetime.strftime(d, self.DATETIME_FMT)
+
+        payload = {
+            "con": sd,
+            "cnf": "text/plain:0",
+        }
+        print(self._requestValueHP("0/DateTime", "/", payload))
+
 
     @property
     def unit_model(self) -> str:
