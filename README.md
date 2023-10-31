@@ -52,12 +52,19 @@ look at the [example file](example.py).
      |  set_heating_schedule(self, schedule: dict[str, dict[str, float]])
      |      Sets the heating schedule for the heating.
      |  
+     |  set_holiday_mode(self, on_holiday: bool)
+     |      Whether to turn the holiday mode on(True) or off(False).
+     |      You can confirm that it works by calling self.is_holiday_mode
+     |  
      |  set_setpoint_temperature(self, setpoint_temperature_c: float)
      |      Sets the heating setpoint (target) temperature, in °C
      |  
      |  set_tank_heating_enabled(self, powerful_active: bool)
      |      Whether to turn the water tank heating on(True) or off(False).
      |      You can confirm that it works by calling self.is_tank_heating_enabled
+     |  
+     |  set_unit_datetime(self, d)
+     |      Sets the datetime of your unit. Does not work on all units
      |  
      |  ----------------------------------------------------------------------
      |  Readonly properties defined here:
@@ -90,6 +97,9 @@ look at the [example file](example.py).
      |  
      |  is_heating_enabled
      |      Returns if the unit heating is enabled
+     |  
+     |  is_holiday_mode
+     |      Returns if the holiday mode active or not
      |  
      |  is_tank_heating_enabled
      |      Returns if the tank heating is currently enabled
@@ -131,7 +141,7 @@ look at the [example file](example.py).
      |      Returns the hot water tank temperature, in °C
      |  
      |  unit_datetime
-     |      Returns the current date of the unit. Takes time to refresh
+     |      Returns the current date of the unit. Is refreshed every minute or so
      |  
      |  unit_model
      |      Returns the model of the heating unit.
