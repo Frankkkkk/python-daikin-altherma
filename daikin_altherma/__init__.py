@@ -182,6 +182,29 @@ class DaikinAltherma:
         """Returns the pin code of the LAN adapter"""
         return self._requestValueHP("1/ChildLock/PinCode/la", "/m2m:rsp/pc/m2m:cin/con")
 
+
+    @property
+    def is_holiday_mode(self) -> bool:
+        """ Returns if the holiday mode active or not """
+        hs = self._requestValueHP("1/Holiday/HolidayState/la", "/m2m:rsp/pc/m2m:cin/con")
+        return hs == 1
+
+    def set_holiday_mode(self, on_holiday: bool):
+        """ Whether to turn the holiday mode on(True) or off(False).
+        You can confirm that it works by calling self.is_holiday_mode
+        """
+        mode_dict = {
+            True: 1,
+            False: 0,
+        }
+
+        payload = {
+            'con': mode_dict[on_holiday],
+            'cnf': 'text/plain:0',
+        }
+
+        self._requestValueHP("1/Holiday/HolidayState", "/", payload)
+
     # HOT WATER TANK STUFF
     @property
     def tank_temperature(self) -> float:
