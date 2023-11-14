@@ -62,7 +62,7 @@ class DaikinAltherma:
 
     def __init__(self, adapter_ip: str):
         self.adapter_ip = adapter_ip
-        self.ws = create_connection(f"ws://{self.adapter_ip}/mca")
+        self.ws = create_connection(f"ws://{self.adapter_ip}/mca", timeout=2)
 
     def _requestValue(self, item: str, output_path: str, payload=None):
         reqid = uuid.uuid4().hex[0:5]
