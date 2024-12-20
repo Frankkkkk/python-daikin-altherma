@@ -342,6 +342,21 @@ class DaikinAltherma:
         return out_schedules
 
     @property
+    def is_heating_error(self) -> bool:
+        """Returns if the heating has an error"""
+        return self._requestValueHP("1/UnitStatus/ErrorState/la", "/m2m:rsp/pc/m2m:cin/con") == 1
+
+    @property
+    def is_heating_active(self) -> bool:
+        """Returns if the heating is currently active"""
+        return self._requestValueHP("1/UnitStatus/ActiveState/la", "/m2m:rsp/pc/m2m:cin/con") == 1
+
+    @property
+    def is_heating_emergency(self) -> bool:
+        """Returns if the heating is in emergency state"""
+        return self._requestValueHP("1/UnitStatus/EmergencyState/la", "/m2m:rsp/pc/m2m:cin/con") == 1
+
+    @property
     def tank_schedule(self) -> list[TankSchedule]:
         """Returns the TankSchedule list heating"""
         d = self._requestValueHP(
@@ -397,6 +412,21 @@ class DaikinAltherma:
             Day=dq['Day'],
         )
 
+    @property
+    def is_tank_error(self) -> bool:
+        """Returns if the tank has an error"""
+        return self._requestValueHP("2/UnitStatus/ErrorState/la", "/m2m:rsp/pc/m2m:cin/con") == 1
+
+    @property
+    def is_tank_active(self) -> bool:
+        """Returns if the tank is currently active"""
+        return self._requestValueHP("2/UnitStatus/ActiveState/la", "/m2m:rsp/pc/m2m:cin/con") == 1
+
+    @property
+    def is_tank_emergency(self) -> bool:
+        """Returns if the tank is in emergency state"""
+        return self._requestValueHP("2/UnitStatus/EmergencyState/la", "/m2m:rsp/pc/m2m:cin/con") == 1
+
 
     def print_all_status(self):
         print(
@@ -406,13 +436,15 @@ Daikin unit: {self.unit_model} {self.unit_type}
 Daikin time: {self.unit_datetime}
 Hot water tank:
     Current: {self.tank_temperature}°C (target {self.tank_setpoint_temperature}°C)
-    Heating enabled: {self.is_tank_heating_enabled} (Powerful: {self.is_tank_powerful})
+    Heating enabled: {self.is_tank_heating_enabled} (Powerful: {self.is_tank_powerful}) (Active: {self.is_tank_active})
+    Error: {self.is_tank_error} (Emergency: {self.is_tank_emergency})
     Schedule: {self.tank_schedule[0]}
     Schedule state: {self.tank_schedule_state}
 Heating:
     Outdoor temp:{self.outdoor_temperature}°C
     Indoor temp: {self.indoor_temperature}°C
-    Heating target: {self.indoor_setpoint_temperature}°C (is heating enabled: {self.is_heating_enabled})
+    Heating target: {self.indoor_setpoint_temperature}°C (is heating enabled: {self.is_heating_enabled}) (Active: {self.is_heating_active})
+    Error: {self.is_heating_error} (Emergency: {self.is_heating_emergency})
     Leaving water: {self.leaving_water_temperature}°C
     Heating mode: {self.heating_mode}
     Schedule: {self.heating_schedule[0]}
