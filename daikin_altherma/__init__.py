@@ -299,9 +299,14 @@ class DaikinAltherma:
         )
 
     @property
-    def power_consumption(self) -> dict:
-        """Returns the energy consumption in kWh per [D]ay, [W]eek, [M]onth"""
+    def heating_power_consumption(self) -> dict:
+        """Returns the energy (electrical) consumption for heating in kWh per [D]ay, [W]eek, [M]onth"""
         return self._requestValueHP("1/Consumption/la", "m2m:rsp/pc/m2m:cin/con")
+
+    @property
+    def tank_power_consumption(self) -> dict:
+        """Returns the energy (electrical) consumption for hot water in kWh per [D]ay, [W]eek, [M]onth"""
+        return self._requestValueHP("2/Consumption/la", "m2m:rsp/pc/m2m:cin/con")
 
     def set_setpoint_temperature(self, setpoint_temperature_c: float):
         """Sets the heating setpoint (target) temperature, in °C"""
