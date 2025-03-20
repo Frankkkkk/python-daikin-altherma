@@ -3,7 +3,6 @@ from typing import Callable
 from dataclasses import dataclass
 import enum
 import logging
-import time
 import uuid
 import datetime
 
@@ -39,15 +38,18 @@ class HeatingOperationMode(str, enum.Enum):
     Heating = 'Heating'
     Cooling = 'Cooling'
 
+
 @dataclass
 class _ScheduleState:
     OperationMode: HeatingOperationMode
     StartTime: int
-    Day: str ## XXX enum
+    Day: str  # XXX enum
+
 
 @dataclass
 class HeatingScheduleState(_ScheduleState):
     TargetTemperature: float
+
 
 @dataclass
 class TankScheduleState(_ScheduleState):
@@ -57,8 +59,10 @@ class TankScheduleState(_ScheduleState):
 class DaikinAltherma:
     UserAgent = "python-daikin-altherma"
     DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
-    _heating_value_parser = lambda x: float(x)/10
     DATETIME_FMT = "%Y%m%dT%H%M%SZ"
+        
+    def _heating_value_parser(x):
+        return float(x) / 10
 
     def __init__(self, adapter_ip: str):
         self.adapter_ip = adapter_ip
@@ -128,7 +132,6 @@ class DaikinAltherma:
         }
         print(self._requestValueHP("0/DateTime", "/", payload))
 
-
     @property
     def unit_model(self) -> str:
         """Returns the model of the heating unit.
@@ -182,7 +185,6 @@ class DaikinAltherma:
         """Returns the pin code of the LAN adapter"""
         return self._requestValueHP("1/ChildLock/PinCode/la", "/m2m:rsp/pc/m2m:cin/con")
 
-
     @property
     def is_holiday_mode(self) -> bool:
         """ Returns if the holiday mode active or not """
@@ -224,16 +226,14 @@ class DaikinAltherma:
     def is_tank_heating_enabled(self) -> bool:
         """Returns if the tank heating is currently enabled"""
         return (
-            self._requestValueHP("2/Operation/Power/la", "m2m:rsp/pc/m2m:cin/con")
-            == "on"
+            self._requestValueHP("2/Operation/Power/la", "m2m:rsp/pc/m2m:cin/con") == "on"
         )
 
     @property
     def is_tank_powerful(self) -> bool:
         """Returns if the tank is in powerful state"""
         return (
-            self._requestValueHP("2/Operation/Powerful/la", "m2m:rsp/pc/m2m:cin/con")
-            == 1
+            self._requestValueHP("2/Operation/Powerful/la", "m2m:rsp/pc/m2m:cin/con") == 1
         )
 
     def set_tank_heating_enabled(self, powerful_active: bool):
@@ -285,8 +285,7 @@ class DaikinAltherma:
     def is_heating_enabled(self) -> bool:
         """Returns if the unit heating is enabled"""
         return (
-            self._requestValueHP("1/Operation/Power/la", "m2m:rsp/pc/m2m:cin/con")
-            == "on"
+            self._requestValueHP("1/Operation/Power/la", "m2m:rsp/pc/m2m:cin/con") == "on"
         )
 
     @property
@@ -383,7 +382,6 @@ class DaikinAltherma:
         }
         self._requestValueHP("1/Schedule/List/Heating", "/", payload)
 
-
     @property
     def heating_schedule_state(self) -> HeatingScheduleState:
         """Returns the actual heating schedule state"""
@@ -408,7 +406,7 @@ class DaikinAltherma:
         return TankScheduleState(
             OperationMode=dq['OperationMode'],
             StartTime=dq['StartTime'],
-            TankState=TankStateEnum.int_to_state(dq['TargetTemperature']),  #Copy paste powa
+            TankState=TankStateEnum.int_to_state(dq['TargetTemperature']),  # Copy paste powa
             Day=dq['Day'],
         )
 
@@ -426,7 +424,6 @@ class DaikinAltherma:
     def is_tank_emergency(self) -> bool:
         """Returns if the tank is in emergency state"""
         return self._requestValueHP("2/UnitStatus/EmergencyState/la", "/m2m:rsp/pc/m2m:cin/con") == 1
-
 
     def print_all_status(self):
         print(
@@ -465,7 +462,7 @@ Heating:
 
         for day in DaikinAltherma.DAYS:
             schedule_wk = {}
-            temps = hrs[i : i + 6]
+            temps = hrs[i: i + 6]
             for c in temps:
                 ctime, cval = c.split(",")
                 if ctime == "":
@@ -490,7 +487,7 @@ Heating:
 
             assert len(sday) <= 6
             for hour in sorted(sday.keys()):
-                schedule_day.append(f"{hour},{int(sday[hour]*10)}")
+                schedule_day.append(f"{hour},{int(sday[hour] * 10)}")
             padding_schedule = 6 - len(schedule_day)
             schedule_day += [","] * padding_schedule
             week_schedule += schedule_day
