@@ -96,9 +96,9 @@ class DaikinAltherma:
 
         try:
             return dpath.util.get(result, output_path)
-        except:
-            logging.error("Could not get data. Maybe the unit is starting up?")
-            raise
+        except KeyError:
+            logging.error(f"Could not get data for item {item}. Maybe the unit is starting up?")
+            return None
 
     def _requestValueHP(self, item: str, output_path: str, payload=None):
         return self._requestValue(f"MNAE/{item}", output_path, payload)
@@ -301,6 +301,11 @@ class DaikinAltherma:
     def power_consumption(self) -> dict:
         """Returns the energy consumption in kWh per [D]ay, [W]eek, [M]onth"""
         return self._requestValueHP("1/Consumption/la", "m2m:rsp/pc/m2m:cin/con")
+    
+    @property
+    def tank_power_consumption(self) -> dict:
+        """Returns the energy consumption in kWh per [D]ay, [W]eek, [M]onth"""
+        return self._requestValueHP("2/Consumption/la", "m2m:rsp/pc/m2m:cin/con")    
 
     def set_setpoint_temperature(self, setpoint_temperature_c: float):
         """Sets the heating setpoint (target) temperature, in °C"""
@@ -333,6 +338,8 @@ class DaikinAltherma:
         d = self._requestValueHP(
             "1/Schedule/List/Heating/la", "/m2m:rsp/pc/m2m:cin/con"
         )
+        if d is None:
+            return []
         j = json.loads(d)
 
         out_schedules = []
@@ -362,6 +369,8 @@ class DaikinAltherma:
             "2/Schedule/List/Heating/la", "/m2m:rsp/pc/m2m:cin/con"
         )
         j = json.loads(d)
+        if j is None:
+            return []
 
         def value_parser(x):
             return TankStateEnum.int_to_state(x)
@@ -386,6 +395,8 @@ class DaikinAltherma:
     def heating_schedule_state(self) -> HeatingScheduleState:
         """Returns the actual heating schedule state"""
         d = self._requestValueHP("1/Schedule/Next/la", "/m2m:rsp/pc/m2m:cin/con")
+        if d is None:
+            return None
         j = json.loads(d)
         dq = j['data']
 
@@ -400,6 +411,8 @@ class DaikinAltherma:
     def tank_schedule_state(self) -> TankScheduleState:
         """Returns the actual tank schedule state"""
         d = self._requestValueHP("2/Schedule/Next/la", "/m2m:rsp/pc/m2m:cin/con")
+        if d is None:
+            return None
         j = json.loads(d)
         dq = j['data']
 
@@ -435,8 +448,9 @@ Hot water tank:
     Current: {self.tank_temperature}°C (target {self.tank_setpoint_temperature}°C)
     Heating enabled: {self.is_tank_heating_enabled} (Powerful: {self.is_tank_powerful}) (Active: {self.is_tank_active})
     Error: {self.is_tank_error} (Emergency: {self.is_tank_emergency})
-    Schedule: {self.tank_schedule[0]}
+    Schedules: {self.tank_schedule}
     Schedule state: {self.tank_schedule_state}
+    Consumption: {self.tank_power_consumption}
 Heating:
     Outdoor temp:{self.outdoor_temperature}°C
     Indoor temp: {self.indoor_temperature}°C
@@ -444,8 +458,9 @@ Heating:
     Error: {self.is_heating_error} (Emergency: {self.is_heating_emergency})
     Leaving water: {self.leaving_water_temperature}°C
     Heating mode: {self.heating_mode}
-    Schedule: {self.heating_schedule[0]}
+    Schedules: {self.heating_schedule}
     Schedule state: {self.heating_schedule_state}
+    Consumption: {self.power_consumption}
     """
         )
 
