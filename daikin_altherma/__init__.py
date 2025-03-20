@@ -120,6 +120,8 @@ class DaikinAltherma:
     def unit_datetime(self) -> datetime.datetime:
         """Returns the current date of the unit. Is refreshed every minute or so"""
         d = self._requestValueHP("0/DateTime/la", "/m2m:rsp/pc/m2m:cin/con")
+        if d is None:
+            return None
         return datetime.datetime.strptime(d, self.DATETIME_FMT)
 
     @property
@@ -393,6 +395,15 @@ class DaikinAltherma:
             return None
         else:
             return (r == 1)
+        
+    @property
+    def in_installerstate(self) -> bool:
+        """Returns if the heating has an error"""
+        r = self._requestValueHP("1/UnitStatus/InstallerState/la", "/m2m:rsp/pc/m2m:cin/con")
+        if r is None:
+            return None
+        else:
+            return (r == 1)
 
     @property
     def tank_schedule(self) -> list[TankSchedule]:
@@ -472,6 +483,7 @@ class DaikinAltherma:
             return None
         else:
             return (r == 1)
+        
     @property
     def is_tank_emergency(self) -> bool:
         """Returns if the tank is in emergency state"""
@@ -481,7 +493,16 @@ class DaikinAltherma:
         else:
             return (r == 1)
         
-    def print_all_status(self):
+    @property
+    def tank_in_installerstate(self) -> bool:
+        """Returns if the heating has an error"""
+        r = self._requestValueHP("2/UnitStatus/InstallerState/la", "/m2m:rsp/pc/m2m:cin/con")
+        if r is None:
+            return None
+        else:
+            return (r == 1)        
+        
+    def print_all_status(self, without_schedule: bool = False):
         print(
             f"""
 Daikin adapter: {self.adapter_ip} {self.adapter_model}
@@ -497,9 +518,10 @@ Hot water tank:
     Current: {self.tank_temperature}°C (target {self.tank_setpoint_temperature}°C)
     Heating enabled: {self.is_tank_heating_enabled} (Powerful: {self.is_tank_powerful}) (Active: {self.is_tank_active})
     Error: {self.is_tank_error} (Emergency: {self.is_tank_emergency})
-    Schedules: {self.tank_schedule}
+    Schedules: {"(excluded from print)" if without_schedule else self.tank_schedule}
     Schedule state: {self.tank_schedule_state}
     Consumption: {self.tank_power_consumption}
+    Installer state: {self.tank_in_installerstate}
 Heating:
     Outdoor temp:{self.outdoor_temperature}°C
     Indoor temp: {self.indoor_temperature}°C
@@ -507,9 +529,10 @@ Heating:
     Error: {self.is_heating_error} (Emergency: {self.is_heating_emergency})
     Leaving water: {self.leaving_water_temperature}°C
     Heating mode: {self.heating_mode}
-    Schedules: {self.heating_schedule}
+    Schedules: {"(excluded from print)" if without_schedule else self.heating_schedule}
     Schedule state: {self.heating_schedule_state}
     Consumption: {self.power_consumption}
+    Installer state: {self.in_installerstate}
 Holiday mode: {self.is_holiday_mode}
     """
         )
