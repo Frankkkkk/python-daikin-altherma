@@ -1,12 +1,16 @@
 # python-daikin-altherma
+
 talks to daikin altherma via LAN adapter BRP069A61 or BRP069A62
 
 # How to use
+
 ## How to install ?
+
 Simply get it from [pypi](https://pypi.org/project/python-daikin-altherma/) by:
 `pip3 install python-daikin-altherma`
 
 ## How to run
+
 ```python3
 >>> from daikin_altherma import DaikinAltherma
 >>> d = DaikinAltherma('192.168.10.126')
@@ -30,11 +34,13 @@ Heating:
 ```
 
 ## Schedules
+
 You can set schedules using `set_heating_schedule(schedule)`. Your best bet is to
 look at the [example file](example.py).
 
 # Documentation
-```
+
+```text
     class DaikinAltherma(builtins.object)
      |  DaikinAltherma(adapter_ip: str)
      |  
@@ -58,20 +64,27 @@ look at the [example file](example.py).
      |  
      |  set_setpoint_temperature(self, setpoint_temperature_c: float)
      |      Sets the heating setpoint (target) temperature, in °C
+     |
+     |  set_leaving_water_temperature_offset(self, offset_temperature_c: int)
+     |      Sets the heating leaving water offset temperature, in °C
      |  
      |  set_tank_heating_enabled(self, powerful_active: bool)
      |      Whether to turn the water tank heating on(True) or off(False).
      |      You can confirm that it works by calling self.is_tank_heating_enabled
      |  
      |  set_unit_datetime(self, d)
-     |      Sets the datetime of your unit. Does not work on all units
+     |      Sets the datetime of your unit. Does not work on all units. See `is_unit_datetime_adjustable`
      |  
      |  ----------------------------------------------------------------------
-     |  Readonly properties defined here:
+     |  Readonly properties/methods defined here:
+     |      All properties will return None if not supported.
      |  
      |  adapter_model
      |      Returns the model of the LAN adapter.
      |      Ex: BRP069A61
+     |
+     |  available_services(unit_nr)
+     |      returns a JSON with capacities for each unit. unit_nr is in range [0..2] normally
      |  
      |  heating_mode
      |      This function name makes no sense, because it
@@ -106,9 +119,15 @@ look at the [example file](example.py).
      |  
      |  is_tank_powerful
      |      Returns if the tank is in powerful state
+     |
+     |  is_unit_datetime_adjustable
+     |      Returns True if the datetime of your unit is adjustable
      |  
      |  leaving_water_temperature
      |      Returns the heating leaving water temperature, in °C
+     |  
+     |  leaving_water_temperature_offset
+     |      Returns the heating leaving water offset temperature, in °C
      |  
      |  outdoor_temperature
      |      Returns the outdoor temperature, in °C
@@ -120,7 +139,7 @@ look at the [example file](example.py).
      |      Returns the pin code of the LAN adapter
      |  
      |  power_consumption
-     |      Returns the energy consumption in kWh per [D]ay, [W]eek, [M]onth
+     |      Returns the heating energy consumption in kWh per [D]ay, [W]eek, [M]onth
      |  
      |  remote_setting_version
      |      Returns the remote console setting version
@@ -139,6 +158,9 @@ look at the [example file](example.py).
      |  
      |  tank_temperature
      |      Returns the hot water tank temperature, in °C
+     |
+     |  tank_power_consumption
+     |      Returns the tank energy consumption in kWh per [D]ay, [W]eek, [M]onth
      |  
      |  unit_datetime
      |      Returns the current date of the unit. Is refreshed every minute or so
@@ -149,7 +171,10 @@ look at the [example file](example.py).
      |  
      |  unit_type
      |      Returns the type of unit
-     |  
+     | 
+     |  in_installerstate
+     |      Returns if the heating is in the installer mode, will have limited functionality
+     |
      |  ----------------------------------------------------------------------
      |  Data descriptors defined here:
      |  
@@ -170,6 +195,7 @@ look at the [example file](example.py).
 ```
 
 # Acknowledgments
+
 Many thanks to [william-sy](https://github.com/william-sy/Daikin-BRP069A62) and [KarstenB](https://github.com/KarstenB/DaikinAltherma) for their bootstrap !
 
 # Alternatives
