@@ -186,8 +186,8 @@ look at the [example file](example.py).
      |  unit_type
      |      Returns the type of unit
      | 
-     |  in_installerstate
-     |      Returns if the heating is in the installer mode, will have limited functionality
+     |  in_installerstate and tank_in_installerstate
+     |      Returns if the heating is in the installer mode, will have limited functionality in that case
      |
      |  ----------------------------------------------------------------------
      |  Data descriptors defined here:

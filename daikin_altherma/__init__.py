@@ -451,7 +451,7 @@ class DaikinAltherma:
         
     @property
     def in_installerstate(self) -> bool:
-        """Returns if the heating is in the installer mode, will have limited functionality"""
+        """Returns if the heating is in the installer mode, will have limited functionality in that case"""
         r = self._requestValueHP("1/UnitStatus/InstallerState/la")
         if r is None:
             return None
@@ -561,7 +561,7 @@ class DaikinAltherma:
         
     @property
     def tank_in_installerstate(self) -> bool:
-        """Returns if the tank heating is in the installer mode, will have limited functionality"""
+        """Returns if the tank heating is in the installer mode, will have limited functionality in that case"""
         r = self._requestValueHP("2/UnitStatus/InstallerState/la")
         if r is None:
             return None
