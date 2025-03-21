@@ -134,7 +134,7 @@ class DaikinAltherma:
         """Returns the model of the LAN adapter.
         Ex: BRP069A61"""
         # either BRP069A61 or BRP069A62
-        return self._requestValue("MNCSE-node/deviceInfo", "/m2m:rsp/pc/m2m:dvi/mod")
+        return self._requestValue("MNCSE-node/deviceInfo", "/m2m:rsp/pc/m2m:dvi/mod")  # "NOT /m2m:rsp/pc/m2m:cin/con"
 
     @property
     def unit_datetime(self) -> datetime.datetime:
@@ -205,8 +205,7 @@ class DaikinAltherma:
     @property
     def remote_setting_version(self) -> str:
         """Returns the remote console setting version"""
-        return self._requestValueHP(
-            "1/UnitInfo/Version/RemoconSettings/la")
+        return self._requestValueHP("1/UnitInfo/Version/RemoconSettings/la")
 
     @property
     def remote_software_version(self) -> str:
@@ -258,14 +257,12 @@ class DaikinAltherma:
     @property
     def tank_temperature(self) -> float:
         """Returns the hot water tank temperature, in °C"""
-        return self._requestValueHP(
-            "2/Sensor/TankTemperature/la")
+        return self._requestValueHP("2/Sensor/TankTemperature/la")
 
     @property
     def tank_setpoint_temperature(self) -> float:
         """Returns the hot water tank setpoint (target) temperature, in °C"""
-        return self._requestValueHP(
-            "2/Operation/TargetTemperature/la")
+        return self._requestValueHP("2/Operation/TargetTemperature/la")
 
     @property
     def is_tank_heating_enabled(self) -> bool:
@@ -308,20 +305,17 @@ class DaikinAltherma:
     @property
     def indoor_temperature(self) -> float:
         """Returns the indoor temperature, in °C"""
-        return self._requestValueHP(
-            "1/Sensor/IndoorTemperature/la")
+        return self._requestValueHP("1/Sensor/IndoorTemperature/la")
 
     @property
     def outdoor_temperature(self) -> float:
         """Returns the outdoor temperature, in °C"""
-        return self._requestValueHP(
-            "1/Sensor/OutdoorTemperature/la")
+        return self._requestValueHP("1/Sensor/OutdoorTemperature/la")
 
     @property
     def indoor_setpoint_temperature(self) -> float:
         """Returns the indoor setpoint (target) temperature, in °C"""
-        return self._requestValueHP(
-            "1/Operation/TargetTemperature/la")
+        return self._requestValueHP("1/Operation/TargetTemperature/la")
 
     @property
     def leaving_water_temperature(self) -> float:
@@ -467,8 +461,7 @@ class DaikinAltherma:
     @property
     def tank_schedule(self) -> list[TankSchedule]:
         """Returns the TankSchedule list heating"""
-        d = self._requestValueHP(
-            "2/Schedule/List/Heating/la")
+        d = self._requestValueHP("2/Schedule/List/Heating/la")
         j = json.loads(d)
         if j is None:
             return []
