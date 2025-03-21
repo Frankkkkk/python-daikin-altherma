@@ -62,10 +62,8 @@ class DaikinAltherma:
     DATETIME_FMT = "%Y%m%dT%H%M%SZ"
     
     # Not implemented, but potentially interesting query paths are:
-    # 1/UnitStatus/ControlModeState/la (returns the the type of temperature control, like "ext RT control")
-    # 1/UnitStatus/WarningState/la
-    # 1/UnitStatus/WeatherDependentState/la
-    # 1/UnitStatus/TargetTemperatureOverruledState/la
+    # 1|2/UnitStatus/WeatherDependentState/la
+    # 1|2/UnitStatus/TargetTemperatureOverruledState/la
     # 1|2/UnitInfo/SerialNumber/la (may return "--" if not available)
     # 1|2/UnitInfo/Manufacturer/la ("Daikin")
     # 1|2/UnitIdentifier/Icon (returns a number, like 8 or 9, for the Onecta App)
@@ -110,7 +108,7 @@ class DaikinAltherma:
             logging.error(f"Could not get data for item {item}. Maybe the unit is starting up or relevant module is not installed?")
             return None
 
-    def _requestValueHP(self, item: str, output_path: str, payload=None):
+    def _requestValueHP(self, item: str, output_path: str = "/m2m:rsp/pc/m2m:cin/con", payload=None):
         return self._requestValue(f"MNAE/{item}", output_path, payload)
 
     def available_services(self, unit_nr: int = 1):
@@ -119,7 +117,7 @@ class DaikinAltherma:
         :param unit_nr: number of the unit, normally 0..2, defaults to 1
         :type unit_nr: int, optional
         """
-        d = self._requestValueHP(f"{unit_nr}/UnitProfile/la", "/m2m:rsp/pc/m2m:cin/con")
+        d = self._requestValueHP(f"{unit_nr}/UnitProfile/la")
         if d is None:
             return None 
         return json.loads(d)
@@ -141,7 +139,7 @@ class DaikinAltherma:
     @property
     def unit_datetime(self) -> datetime.datetime:
         """Returns the current date of the unit. Is refreshed every minute or so"""
-        d = self._requestValueHP("0/DateTime/la", "/m2m:rsp/pc/m2m:cin/con")
+        d = self._requestValueHP("0/DateTime/la")
         if d is None:
             return None
         return datetime.datetime.strptime(d, self.DATETIME_FMT)
@@ -149,7 +147,7 @@ class DaikinAltherma:
     @property
     def is_unit_datetime_adjustable(self) -> bool:
         """Returns True if the datetime of your unit is adjustable"""
-        d = self._requestValueHP("0/UnitProfile/la", "/m2m:rsp/pc/m2m:cin/con")
+        d = self._requestValueHP("0/UnitProfile/la")
         if d is None:
             return False
         j = json.loads(d)
@@ -178,62 +176,62 @@ class DaikinAltherma:
     def unit_model(self) -> str:
         """Returns the model of the heating unit.
         Ex: EAVH16S23DA6V"""
-        return self._requestValueHP(
-            "1/UnitInfo/ModelNumber/la", "/m2m:rsp/pc/m2m:cin/con"
-        )
+        # There should in theory also be:
+        # 0/UnitInfo/ModelNumber/la, but it's not implemented (in my unit)
+        # 2/UnitInfo/ModelNumber/la, but replies with the reply from 1/UnitInfo/ModelNumber/la (in my unit)
+        return self._requestValueHP("1/UnitInfo/ModelNumber/la")
 
     @property
     def unit_type(self) -> str:
         """Returns the type of unit"""
-        return self._requestValueHP("1/UnitInfo/UnitType/la", "/m2m:rsp/pc/m2m:cin/con")
+        # same remarks as with UnitInfo/ModelNumber
+        return self._requestValueHP("1/UnitInfo/UnitType/la")
 
     @property
     def indoor_unit_version(self) -> str:
         """Returns the unit version"""
-        return self._requestValueHP(
-            "1/UnitInfo/Version/IndoorSettings/la", "/m2m:rsp/pc/m2m:cin/con"
-        )
+        return self._requestValueHP("1/UnitInfo/Version/IndoorSettings/la")
 
     @property
     def indoor_unit_software_version(self) -> str:
         """Returns the unit software version"""
-        return self._requestValueHP(
-            "1/UnitInfo/Version/IndoorSoftware/la", "/m2m:rsp/pc/m2m:cin/con"
-        )
+        return self._requestValueHP("1/UnitInfo/Version/IndoorSoftware/la")
 
     @property
     def outdoor_unit_software_version(self) -> str:
         """Returns the unit software version"""
-        return self._requestValueHP(
-            "1/UnitInfo/Version/OutdoorSoftware/la", "/m2m:rsp/pc/m2m:cin/con"
-        )
+        return self._requestValueHP("1/UnitInfo/Version/OutdoorSoftware/la")
 
     @property
     def remote_setting_version(self) -> str:
         """Returns the remote console setting version"""
         return self._requestValueHP(
-            "1/UnitInfo/Version/RemoconSettings/la", "/m2m:rsp/pc/m2m:cin/con"
-        )
+            "1/UnitInfo/Version/RemoconSettings/la")
 
     @property
     def remote_software_version(self) -> str:
         """Returns the remote console setting software version"""
         return self._requestValueHP(
-            "1/UnitInfo/Version/RemoconSoftware/la", "/m2m:rsp/pc/m2m:cin/con"
-        )
+            "1/UnitInfo/Version/RemoconSoftware/la")
 
     @property
     def pin_code(self) -> str:
         """Returns the pin code of the LAN adapter"""
-        return self._requestValueHP("1/ChildLock/PinCode/la", "/m2m:rsp/pc/m2m:cin/con")
+        return self._requestValueHP("1/ChildLock/PinCode/la")
 
     @property
     def is_holiday_mode(self) -> bool:
         """ Returns if the holiday mode active or not """
-        r = self._requestValueHP("1/Holiday/HolidayState/la", "/m2m:rsp/pc/m2m:cin/con")
+        r = self._requestValueHP("1/Holiday/HolidayState/la")
         if r is None:
             return None
         return r == 1
+    
+    @property
+    def control_mode(self) -> str:
+        """ Returns the type of control used for heating. This is an installation setting."""
+        # example: "ext RT control" for a contact type external room thermostat, that disables the indoor_temperature and indoor_setpoint_temperature
+        return self._requestValueHP("1/UnitStatus/ControlModeState/la")
 
     def set_holiday_mode(self, on_holiday: bool) -> bool:
         """Whether to turn the holiday mode on(True) or off(False).
@@ -261,20 +259,18 @@ class DaikinAltherma:
     def tank_temperature(self) -> float:
         """Returns the hot water tank temperature, in °C"""
         return self._requestValueHP(
-            "2/Sensor/TankTemperature/la", "/m2m:rsp/pc/m2m:cin/con"
-        )
+            "2/Sensor/TankTemperature/la")
 
     @property
     def tank_setpoint_temperature(self) -> float:
         """Returns the hot water tank setpoint (target) temperature, in °C"""
         return self._requestValueHP(
-            "2/Operation/TargetTemperature/la", "/m2m:rsp/pc/m2m:cin/con"
-        )
+            "2/Operation/TargetTemperature/la")
 
     @property
     def is_tank_heating_enabled(self) -> bool:
         """Returns if the tank heating is currently enabled"""
-        r = self._requestValueHP("2/Operation/Power/la", "m2m:rsp/pc/m2m:cin/con")
+        r = self._requestValueHP("2/Operation/Power/la")
         if r is None:
             return None
         else:
@@ -283,7 +279,7 @@ class DaikinAltherma:
     @property
     def is_tank_powerful(self) -> bool:
         """Returns if the tank is in powerful state"""
-        r = self._requestValueHP("2/Operation/Powerful/la", "m2m:rsp/pc/m2m:cin/con")
+        r = self._requestValueHP("2/Operation/Powerful/la")
         if r is None:
             return None
         else:
@@ -313,36 +309,29 @@ class DaikinAltherma:
     def indoor_temperature(self) -> float:
         """Returns the indoor temperature, in °C"""
         return self._requestValueHP(
-            "1/Sensor/IndoorTemperature/la", "/m2m:rsp/pc/m2m:cin/con"
-        )
+            "1/Sensor/IndoorTemperature/la")
 
     @property
     def outdoor_temperature(self) -> float:
         """Returns the outdoor temperature, in °C"""
         return self._requestValueHP(
-            "1/Sensor/OutdoorTemperature/la", "/m2m:rsp/pc/m2m:cin/con"
-        )
+            "1/Sensor/OutdoorTemperature/la")
 
     @property
     def indoor_setpoint_temperature(self) -> float:
         """Returns the indoor setpoint (target) temperature, in °C"""
         return self._requestValueHP(
-            "1/Operation/TargetTemperature/la", "/m2m:rsp/pc/m2m:cin/con"
-        )
+            "1/Operation/TargetTemperature/la")
 
     @property
     def leaving_water_temperature(self) -> float:
         """Returns the heating leaving water temperature, in °C"""
-        return self._requestValueHP(
-            "1/Sensor/LeavingWaterTemperatureCurrent/la", "m2m:rsp/pc/m2m:cin/con"
-        )
+        return self._requestValueHP("1/Sensor/LeavingWaterTemperatureCurrent/la")
 
     @property
     def leaving_water_temperature_offset(self) -> float:
         """Returns the heating leaving water temperature, in °C"""
-        return self._requestValueHP(
-            "1/Operation/LeavingWaterTemperatureOffsetHeating/la", "m2m:rsp/pc/m2m:cin/con"
-        )
+        return self._requestValueHP("1/Operation/LeavingWaterTemperatureOffsetHeating/la")
         
     def set_leaving_water_temperature_offset(self, offset_temperature_c: int) -> bool:
         """Sets the heating leaving water offset temperature, in °C
@@ -361,7 +350,7 @@ class DaikinAltherma:
     @property
     def is_heating_enabled(self) -> bool:
         """Returns if the unit heating is enabled"""
-        r = self._requestValueHP("1/Operation/Power/la", "m2m:rsp/pc/m2m:cin/con")
+        r = self._requestValueHP("1/Operation/Power/la")
         if r is None:
             return None
         else:
@@ -371,19 +360,17 @@ class DaikinAltherma:
     def heating_mode(self) -> str:
         """Returns whether the heat pump is heating or cooling.
         """
-        return self._requestValueHP(
-            "1/Operation/OperationMode/la", "m2m:rsp/pc/m2m:cin/con"
-        )
+        return self._requestValueHP("1/Operation/OperationMode/la")
 
     @property
     def power_consumption(self) -> dict:
         """Returns the heating energy consumption in kWh per [D]ay, [W]eek, [M]onth"""
-        return self._requestValueHP("1/Consumption/la", "m2m:rsp/pc/m2m:cin/con")
+        return self._requestValueHP("1/Consumption/la")
     
     @property
     def tank_power_consumption(self) -> dict:
         """Returns the tank energy consumption in kWh per [D]ay, [W]eek, [M]onth"""
-        return self._requestValueHP("2/Consumption/la", "m2m:rsp/pc/m2m:cin/con")    
+        return self._requestValueHP("2/Consumption/la")    
 
     def set_setpoint_temperature(self, setpoint_temperature_c: float) -> bool:
         """Sets the heating setpoint (target) temperature, in °C
@@ -422,8 +409,7 @@ class DaikinAltherma:
     def heating_schedule(self) -> list[HeatingSchedule]:
         """Returns the HeatingSchedule list heating"""
         d = self._requestValueHP(
-            "1/Schedule/List/Heating/la", "/m2m:rsp/pc/m2m:cin/con"
-        )
+            "1/Schedule/List/Heating/la")
         if d is None:
             return []
         j = json.loads(d)
@@ -436,16 +422,25 @@ class DaikinAltherma:
     @property
     def is_heating_error(self) -> bool:
         """Returns if the heating has an error"""
-        r = self._requestValueHP("1/UnitStatus/ErrorState/la", "/m2m:rsp/pc/m2m:cin/con")
+        r = self._requestValueHP("1/UnitStatus/ErrorState/la")
         if r is None:
             return None
         else:
             return (r == 1)
+        
+    @property
+    def is_heating_warning(self) -> bool:
+        """Returns if the heating has a warning"""
+        r = self._requestValueHP("1/UnitStatus/WarningState/la")
+        if r is None:
+            return None
+        else:
+            return (r == 1)        
 
     @property
     def is_heating_active(self) -> bool:
         """Returns if the heating is currently active"""
-        r = self._requestValueHP("1/UnitStatus/ActiveState/la", "/m2m:rsp/pc/m2m:cin/con")
+        r = self._requestValueHP("1/UnitStatus/ActiveState/la")
         if r is None:
             return None
         else:
@@ -454,7 +449,7 @@ class DaikinAltherma:
     @property
     def is_heating_emergency(self) -> bool:
         """Returns if the heating is in emergency state"""
-        r = self._requestValueHP("1/UnitStatus/EmergencyState/la", "/m2m:rsp/pc/m2m:cin/con")
+        r = self._requestValueHP("1/UnitStatus/EmergencyState/la")
         if r is None:
             return None
         else:
@@ -463,7 +458,7 @@ class DaikinAltherma:
     @property
     def in_installerstate(self) -> bool:
         """Returns if the heating is in the installer mode, will have limited functionality"""
-        r = self._requestValueHP("1/UnitStatus/InstallerState/la", "/m2m:rsp/pc/m2m:cin/con")
+        r = self._requestValueHP("1/UnitStatus/InstallerState/la")
         if r is None:
             return None
         else:
@@ -473,8 +468,7 @@ class DaikinAltherma:
     def tank_schedule(self) -> list[TankSchedule]:
         """Returns the TankSchedule list heating"""
         d = self._requestValueHP(
-            "2/Schedule/List/Heating/la", "/m2m:rsp/pc/m2m:cin/con"
-        )
+            "2/Schedule/List/Heating/la")
         j = json.loads(d)
         if j is None:
             return []
@@ -507,7 +501,7 @@ class DaikinAltherma:
     @property
     def heating_schedule_state(self) -> HeatingScheduleState:
         """Returns the actual heating schedule state"""
-        d = self._requestValueHP("1/Schedule/Next/la", "/m2m:rsp/pc/m2m:cin/con")
+        d = self._requestValueHP("1/Schedule/Next/la")
         if d is None:
             return None
         j = json.loads(d)
@@ -523,7 +517,7 @@ class DaikinAltherma:
     @property
     def tank_schedule_state(self) -> TankScheduleState:
         """Returns the actual tank schedule state"""
-        d = self._requestValueHP("2/Schedule/Next/la", "/m2m:rsp/pc/m2m:cin/con")
+        d = self._requestValueHP("2/Schedule/Next/la")
         if d is None:
             return None
         j = json.loads(d)
@@ -539,16 +533,25 @@ class DaikinAltherma:
     @property
     def is_tank_error(self) -> bool:
         """Returns if the tank has an error"""
-        r = self._requestValueHP("2/UnitStatus/ErrorState/la", "/m2m:rsp/pc/m2m:cin/con")
+        r = self._requestValueHP("2/UnitStatus/ErrorState/la")
         if r is None:
             return None
         else:
             return (r == 1)
+        
+    @property
+    def is_tank_warning(self) -> bool:
+        """Returns if the tank has a warning"""
+        r = self._requestValueHP("2/UnitStatus/WarningState/la")
+        if r is None:
+            return None
+        else:
+            return (r == 1)        
 
     @property
     def is_tank_active(self) -> bool:
         """Returns if the tank is currently active"""
-        r = self._requestValueHP("2/UnitStatus/ActiveState/la", "/m2m:rsp/pc/m2m:cin/con")
+        r = self._requestValueHP("2/UnitStatus/ActiveState/la")
         if r is None:
             return None
         else:
@@ -557,7 +560,7 @@ class DaikinAltherma:
     @property
     def is_tank_emergency(self) -> bool:
         """Returns if the tank is in emergency state"""
-        r = self._requestValueHP("2/UnitStatus/EmergencyState/la", "/m2m:rsp/pc/m2m:cin/con")
+        r = self._requestValueHP("2/UnitStatus/EmergencyState/la")
         if r is None:
             return None
         else:
@@ -565,46 +568,90 @@ class DaikinAltherma:
         
     @property
     def tank_in_installerstate(self) -> bool:
-        """Returns if the heating has an error"""
-        r = self._requestValueHP("2/UnitStatus/InstallerState/la", "/m2m:rsp/pc/m2m:cin/con")
+        """Returns if the tank heating is in the installer mode, will have limited functionality"""
+        r = self._requestValueHP("2/UnitStatus/InstallerState/la")
         if r is None:
             return None
         else:
-            return (r == 1)        
+            return (r == 1)
+    
+    @property
+    def heating_error_status(self) -> str:
+        """Returns the heating status: OK or Warning or Error or Emergency"""
+        e = self.is_heating_emergency
+        if e is None: 
+            return None
+        if e:
+            return "Emergency"
+        e = self.is_heating_error
+        if e is None: 
+            return None
+        if e:
+            return "Error"
+        e = self.is_heating_warning
+        if e is None: 
+            return None
+        if e:
+            return "Warning"
+        return "OK"
+    
+    @property
+    def tank_error_status(self) -> str:
+        """Returns the tank status: OK or Warning or Error or Emergency"""
+        e = self.is_tank_emergency
+        if e is None: 
+            return None
+        if e:
+            return "Emergency"
+        e = self.is_tank_error
+        if e is None: 
+            return None
+        if e:
+            return "Error"
+        e = self.is_tank_warning
+        if e is None: 
+            return None
+        if e:
+            return "Warning"
+        return "OK"    
         
     def print_all_status(self, without_schedule: bool = False):
+        def ns(x):
+            return x if x is not None else "--not supported--"
+        
         print(
             f"""
-Daikin adapter: {self.adapter_ip} {self.adapter_model}
-Daikin unit: {self.unit_model} {self.unit_type}
-Daikin time: {self.unit_datetime} (adjustable: {self.is_unit_datetime_adjustable})
+Daikin adapter: {ns(self.adapter_ip)} {ns(self.adapter_model)}
+Daikin unit: {ns(self.unit_model)} {ns(self.unit_type)}
+Daikin time: {ns(self.unit_datetime)} (adjustable: {ns(self.is_unit_datetime_adjustable)})
 Software versions:
-    Indoor: {self.indoor_unit_software_version}
-    Outdoor: {self.outdoor_unit_software_version}
-    Remote settings: {self.remote_setting_version}
-    Remote software: {self.remote_software_version}
-    Pin code: {self.pin_code}
+    Indoor: {ns(self.indoor_unit_software_version)}
+    Outdoor: {ns(self.outdoor_unit_software_version)}
+    Remote settings: {ns(self.remote_setting_version)}
+    Remote software: {ns(self.remote_software_version)}
+    Pin code: {ns(self.pin_code)}
 Hot water tank:
-    Current: {self.tank_temperature}°C (target {self.tank_setpoint_temperature}°C)
-    Heating enabled: {self.is_tank_heating_enabled} (Powerful: {self.is_tank_powerful}) (Active: {self.is_tank_active})
-    Error: {self.is_tank_error} (Emergency: {self.is_tank_emergency})
-    Schedules: {"(excluded from print)" if without_schedule else self.tank_schedule}
-    Schedule state: {self.tank_schedule_state}
-    Consumption: {self.tank_power_consumption}
-    Installer state: {self.tank_in_installerstate}
+    Current: {ns(self.tank_temperature)}°C (target {ns(self.tank_setpoint_temperature)}°C)
+    Heating enabled: {ns(self.is_tank_heating_enabled)} (Powerful: {ns(self.is_tank_powerful)}) (Active: {ns(self.is_tank_active)})
+    Status: {ns(self.heating_error_status)}
+    Schedules: {"(excluded from print)" if without_schedule else ns(self.tank_schedule)}
+    Schedule state: {ns(self.tank_schedule_state)}
+    Consumption: {ns(self.tank_power_consumption)}
+    Installer state: {ns(self.tank_in_installerstate)}
 Heating:
-    Outdoor temp:{self.outdoor_temperature}°C
-    Indoor temp: {self.indoor_temperature}°C
-    Heating target: {self.indoor_setpoint_temperature}°C (is heating enabled: {self.is_heating_enabled}) (Active: {self.is_heating_active})
-    Error: {self.is_heating_error} (Emergency: {self.is_heating_emergency})
-    Leaving water: {self.leaving_water_temperature}°C
-    Leaving water offset: {self.leaving_water_temperature_offset}°C
-    Heating mode: {self.heating_mode}
-    Schedules: {"(excluded from print)" if without_schedule else self.heating_schedule}
-    Schedule state: {self.heating_schedule_state}
-    Consumption: {self.power_consumption}
-    Installer state: {self.in_installerstate}
-Holiday mode: {self.is_holiday_mode}
+    Control mode: {ns(self.control_mode)}
+    Outdoor temp: {ns(self.outdoor_temperature)}°C
+    Indoor temp: {ns(self.indoor_temperature)}°C (target {ns(self.indoor_setpoint_temperature)}°C)
+    Heating enabled: {ns(self.is_heating_enabled)} (Active: {ns(self.is_heating_active)})
+    Status: {ns(self.tank_error_status)}
+    Leaving water: {ns(self.leaving_water_temperature)}°C
+    Leaving water offset: {ns(self.leaving_water_temperature_offset)}°C
+    Heating mode: {ns(self.heating_mode)}
+    Schedules: {"(excluded from print)" if without_schedule else ns(self.heating_schedule)}
+    Schedule state: {ns(self.heating_schedule_state)}
+    Consumption: {ns(self.power_consumption)}
+    Installer state: {ns(self.in_installerstate)}
+Holiday mode: {ns(self.is_holiday_mode)}
     """
         )
 

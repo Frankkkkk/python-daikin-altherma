@@ -84,11 +84,13 @@ look at the [example file](example.py).
      |      Ex: BRP069A61
      |
      |  available_services(unit_nr)
-     |      returns a JSON with capacities for each unit. unit_nr is in range [0..2] normally
+     |      Returns a JSON with capacities for each unit. unit_nr is in range [0..2] normally
      |  
+     |  control_mode
+     |      Returns the type of control used for heating. This is an installation setting, and controls for example the availability of indoor_temperature 
+     |
      |  heating_mode
-     |      This function name makes no sense, because it
-     |      returns whether the heat pump is heating or cooling.
+     |      Returns whether the heat pump is heating or cooling.
      |  
      |  heating_schedule
      |      Returns the HeatingSchedule list heating
@@ -110,12 +112,24 @@ look at the [example file](example.py).
      |  
      |  is_heating_enabled
      |      Returns if the unit heating is enabled
+     |
+     |  is_heating_[warning|error|emergency]
+     |      Returns if heating has a warning or an error or an emergency
+     |
+     |  heating_error_status
+     |      Returns the heating status: "OK" or "Warning" or "Error" or "Emergency"     
      |  
      |  is_holiday_mode
      |      Returns if the holiday mode active or not
      |  
      |  is_tank_heating_enabled
      |      Returns if the tank heating is currently enabled
+     |
+     |  is_tank_[warning|error|emergency]
+     |      Returns if tank heating has a warning or an error or an emergency
+     |
+     |  tank_error_status
+     |      Returns the tank status: "OK" or "Warning" or "Error" or "Emergency"
      |  
      |  is_tank_powerful
      |      Returns if the tank is in powerful state
