@@ -2,3 +2,4 @@ build/
 dist/
 *.egg-info
 apk/
+daikin_altherma/__pycache__/
